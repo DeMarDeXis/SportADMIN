@@ -1,0 +1,15 @@
+version: '3'
+
+tasks:
+  parse:
+    alias: parser
+    desc: "Parse is working"
+    cmds:
+      - echo "Parse is working"
+      - go run ./cmd/parser/main.go
+
+  build:
+    alias: b
+    desc: "Build app"
+    cmds:
+      - go build
