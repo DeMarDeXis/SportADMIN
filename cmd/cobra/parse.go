@@ -3,6 +3,7 @@ package cobra
 import (
 	"AdminAppForDiplom/internal/parser/nhl"
 	"AdminAppForDiplom/pkg/lib/customjsonexp"
+	"fmt"
 	"github.com/geziyor/geziyor"
 	"github.com/geziyor/geziyor/client"
 	"github.com/geziyor/geziyor/export"
@@ -38,7 +39,9 @@ func parse(cmd *cobra.Command, _ []string) {
 		parser = nhl.NHLNameParse
 
 	case "roster":
-		filePath = jsonPath + "NHLAbbr.json"
+		//filePath = jsonPath + "NHLAbbr.json"
+		fmt.Println("roster")
+		return
 
 	default:
 		slog.Error("Unsupported method", "method", method)
