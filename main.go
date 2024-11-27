@@ -26,3 +26,6 @@ func setupPrettySlogLocal() *slog.Logger {
 
 	return slog.New(handlerLog)
 }
+
+// TODO: add to config
+// TODO: fix nhl player parse, where player have a captain role

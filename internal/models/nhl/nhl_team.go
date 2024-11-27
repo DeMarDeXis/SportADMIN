@@ -16,3 +16,19 @@ func (m Team) MarshalJSON() ([]byte, error) {
 		Abbr: m.Abbr,
 	})
 }
+
+type TeamRoster struct {
+	Name   string       `json:"name"`
+	Roster []PlayerInfo `json:"roster"`
+}
+
+type PlayerInfo struct {
+	Number     string `json:"number"`
+	Name       string `json:"name"`
+	Surname    string `json:"surname"`
+	Position   string `json:"position"`
+	Hand       string `json:"s/f"`
+	Age        string `json:"age"`
+	Acquired   string `json:"acquired"`
+	Birthplace string `json:"birthplace"`
+}
