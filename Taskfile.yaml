@@ -9,20 +9,39 @@ tasks:
       - go run ./cmd/parser/main.go
 
   build:
-    alias: b
+    aliases:
+      - b
     desc: "Build app"
     cmds:
       - go build
 
   build-custom:
-    alias: b
+    aliases:
+      - bc
     desc: "Build app"
     cmds:
       - go build -o sportthunder.exe
 
   parse-abbr-nhl:
-    alias: pan
+    aliases:
+    - pan
     desc: "Parse nhl abbreviations"
     cmds:
       - echo "Parse nhl abbreviations"
-      - ./sportthunder nhl -method roster
+      - ./sportthunder nhl --method abbr
+
+  parse-roster-nhl:
+    aliases:
+    - prnhl
+    desc: "Parse nhl roster(debug)"
+    cmds:
+      - echo "Parse nhl abbreviations"
+      - ./sportthunder nhl --method roster
+
+  parse-allroster-nhl:
+    aliases:
+      - parsnhl
+    desc: "Parse nhl roster"
+    cmds:
+      - echo "Parse nhl abbreviations"
+      - ./sportthunder nhl --method allroster

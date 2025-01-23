@@ -7,6 +7,13 @@ type Team struct {
 	Abbr string `json:"abbr"`
 }
 
+type TeamDB struct {
+	ID           int    `db:"id"`
+	Name         string `db:"name" json:"name"`
+	Abbreviation string `db:"abbreviation" json:"abbr"`
+	ImgURL       string `db:"img_url"`
+}
+
 func (m Team) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Name string `json:"name"`
@@ -23,12 +30,14 @@ type TeamRoster struct {
 }
 
 type PlayerInfo struct {
-	Number     string `json:"number"`
-	Name       string `json:"name"`
-	Surname    string `json:"surname"`
-	Position   string `json:"position"`
-	Hand       string `json:"s/f"`
-	Age        string `json:"age"`
-	Acquired   string `json:"acquired"`
-	Birthplace string `json:"birthplace"`
+	Number     string `json:"number"`     // [0]
+	Name       string `json:"name"`       // [1]
+	Surname    string `json:"surname"`    // [2]
+	Position   string `json:"position"`   // [3]
+	Hand       string `json:"s/f"`        // [4]
+	Age        string `json:"age"`        // [5]
+	Acquired   string `json:"acquired"`   // [6]
+	Birthplace string `json:"birthplace"` // [7]
+	Role       string `json:"role"`
+	Injured    bool   `json:"injured"` // find: img
 }

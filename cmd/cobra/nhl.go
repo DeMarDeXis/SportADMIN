@@ -52,3 +52,29 @@ func parseNHL(cmd *cobra.Command, _ []string) {
 
 	slog.Info("NHL parse finished")
 }
+
+func loadNHLToDB(cmd *cobra.Command, _ []string) {
+	ctx.log.Info("NHL loader started")
+
+	method := cmd.Flag("method").Value.String()
+	ctx.log.Info("method", "method", method)
+
+	switch method {
+	case "abbr":
+		err := ctx.service.Load.Loader()
+		if err != nil {
+			ctx.log.Error("failed to load to DB", "error", err)
+			return
+		}
+
+	case "roster":
+
+	case "allroster":
+
+	default:
+		slog.Error("Unsupported method", "method", method)
+		cmd.PrintErr("Unknown method")
+	}
+
+	ctx.log.Info("NHL loader finished")
+}

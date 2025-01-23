@@ -104,10 +104,29 @@ func UnoRosterParse(g *geziyor.Geziyor, r *client.Response, team *nhl.TeamRoster
 		if count >= 29 && count <= 53 {
 			text := strings.TrimSpace(s.Text())
 			parts := strings.Fields(text)
+			fmt.Println(len(parts))
 
 			if len(parts) >= 8 && parts[0] != " " {
 				// Validation checks
-				if isValidPlayerData(parts) {
+				isInj := isInjured(s)
+				//role, isCapBool := isCaptainOrAssistant(parts)
+				//
+				//if isValidPlayerData(parts) && isCapBool != false {
+				//	player := nhl.PlayerInfo{
+				//		Number:     parts[0],
+				//		Name:       parts[1],
+				//		Surname:    parts[2],
+				//		Position:   parts[3],
+				//		Hand:       parts[4],
+				//		Age:        parts[5],
+				//		Acquired:   parts[6],
+				//		Birthplace: strings.Join(parts[7:], " "),
+				//		Injured:    isInj,
+				//		Role:       role,
+				//	}
+				//	team.Roster = append(team.Roster, player)
+				//}
+				if isValidPlayerData(parts) && isCaptainOrAssistant(parts) == false {
 					player := nhl.PlayerInfo{
 						Number:     parts[0],
 						Name:       parts[1],
@@ -117,9 +136,38 @@ func UnoRosterParse(g *geziyor.Geziyor, r *client.Response, team *nhl.TeamRoster
 						Age:        parts[5],
 						Acquired:   parts[6],
 						Birthplace: strings.Join(parts[7:], " "),
+						Injured:    isInj,
+						Role:       " ",
+					}
+					team.Roster = append(team.Roster, player)
+				} else if isCaptainOrAssistant(parts) {
+					player := nhl.PlayerInfo{
+						Number:     parts[0],
+						Name:       parts[1],
+						Surname:    parts[2],
+						Role:       parts[3],
+						Position:   parts[4],
+						Hand:       parts[5],
+						Age:        parts[6],
+						Acquired:   parts[7],
+						Birthplace: strings.Join(parts[8:], " "),
 					}
 					team.Roster = append(team.Roster, player)
 				}
+				//if isInjured(s) {
+				//	player := nhl.PlayerInfo{
+				//		Number:     parts[0],
+				//		Name:       parts[1],
+				//		Surname:    parts[2],
+				//		Position:   parts[3],
+				//		Hand:       parts[4],
+				//		Age:        parts[5],
+				//		Acquired:   parts[6],
+				//		Birthplace: strings.Join(parts[7:], " "),
+				//		Injured:    true,
+				//	}
+				//	team.Roster = append(team.Roster, player)
+				//}
 			}
 		}
 		count++
@@ -132,6 +180,11 @@ func UnoRosterParse(g *geziyor.Geziyor, r *client.Response, team *nhl.TeamRoster
 }
 
 func isValidPlayerData(parts []string) bool {
+	// Number check - must be numeric
+	if _, err := strconv.Atoi(parts[0]); err != nil {
+		return false
+	}
+
 	// Position check - max 2 characters
 	if len(parts[3]) > 2 {
 		return false
@@ -142,11 +195,6 @@ func isValidPlayerData(parts []string) bool {
 		return false
 	}
 
-	// Number check - must be numeric
-	if _, err := strconv.Atoi(parts[0]); err != nil {
-		return false
-	}
-
 	// Age check - must be numeric
 	if _, err := strconv.Atoi(parts[5]); err != nil {
 		return false
@@ -154,4 +202,28 @@ func isValidPlayerData(parts []string) bool {
 
 	// Additional validation can be added here
 	return true
+}
+
+func isCaptainOrAssistant(parts []string) bool {
+	if parts[3] == "(C)" || parts[3] == "(A)" {
+		return true
+	}
+
+	return false
+}
+
+//func isCaptainOrAssistant(parts []string) (string, bool) {
+//	if parts[3] == "(C)" || parts[3] == "(A)" {
+//		return parts[3], true
+//	}
+//
+//	return " ", false
+//}
+
+func isInjured(s *goquery.Selection) bool {
+	if s.Find("img[alt='Injured Reserve']").Length() > 0 {
+		return true
+	}
+
+	return false
 }
