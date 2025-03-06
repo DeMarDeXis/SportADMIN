@@ -23,10 +23,12 @@ func parseNFL(cmd *cobra.Command, _ []string) {
 	slog.Info("method", "method", method)
 
 	switch method {
-	case "nfl":
-		filePath = jsonPath + "NFLAbbr.json"
+	case "nflabbr":
+		filePath = jsonPath + nflPath + abbrNFL
 		objParse = nfl.ParseAbbr
 		directObj = direct.NFLNameAbbr
+	case "nflroster":
+		slog.Info("nflroster parse started")
 	default:
 		slog.Error("Unsupported method", "method", method)
 		cmd.PrintErr("Unknown method")

@@ -36,8 +36,6 @@ func setupPrettySlogLocal() *slog.Logger {
 	return slog.New(handlerLog)
 }
 
-// TODO: add to config
 // TODO: fix t.j. oshie err
-// TODO: add db connection(priority)
-// TODO: delete unused dir ./config in internal
-// TODO: adter init db check db-cmds
+// TODO: add flags-methods to drawio
+// TODO: add img_url to teams and push to github

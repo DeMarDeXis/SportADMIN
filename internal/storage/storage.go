@@ -6,16 +6,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Load interface {
-	Loader(teams []nhl.TeamDB) error
+type NHLLoadDB interface {
+	NHLLoader(teams []nhl.TeamDB) error
+	RosterLoaderToDB(teamRoster nhl.TeamRosterDB) error
 }
 
 type Storage struct {
-	Load
+	NHLLoadDB
 }
 
 func NewStorage(db *sqlx.DB) *Storage {
 	return &Storage{
-		Load: postgres.NewLoaderStorage(db),
+		NHLLoadDB: postgres.NewLoaderStorage(db),
 	}
 }

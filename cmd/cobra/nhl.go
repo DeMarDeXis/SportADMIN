@@ -11,13 +11,8 @@ import (
 	"log/slog"
 )
 
-// TODO: add to config
-const (
-	jsonPath = "./jsondata/"
-)
-
 func parseNHL(cmd *cobra.Command, _ []string) {
-	slog.Info("NHL parse started")
+	ctx.log.Info("NHL parse started")
 
 	var objParse func(g *geziyor.Geziyor, r *client.Response)
 	var filePath string
@@ -25,32 +20,37 @@ func parseNHL(cmd *cobra.Command, _ []string) {
 
 	method := cmd.Flag("method").Value.String()
 	fmt.Printf("method: %s\n", method)
-	slog.Info("method", "method", method)
+	ctx.log.Info("method", "method", method)
 
 	switch method {
 	case "abbr":
-		//TODO: add to config
-		filePath = jsonPath + "NHLAbbr.json"
+		filePath = jsonPath + abbrNHL
 		objParse = nhl.NameParse
 		directObj = direct.NHLNameAbbr
 
 	case "roster":
-		filePath = jsonPath + "NHLRoster.json"
+		filePath = jsonPath + rosterNHL
 		objParse = nhl.RosterParse
 		directObj = direct.NHLRoster
 
 	case "allroster":
-		filePath = jsonPath + "NHLAllRoster.json"
+		filePath = jsonPath + allRosterNHL
 		objParse = nhl.AllRosterParse
 		directObj = direct.AllNHLRoster
+
+	case "debug":
+		filePath = jsonPath + debugRosterNHL
+		//objParse = nhl.AllRosterParse
+		//directObj = direct.AllNHLRoster
+
 	default:
-		slog.Error("Unsupported method", "method", method)
+		ctx.log.Error("Unsupported method", "method", method)
 		cmd.PrintErr("Unknown method")
 	}
 
 	parser.Parser(objParse, filePath, directObj)
 
-	slog.Info("NHL parse finished")
+	ctx.log.Info("NHL parse finished")
 }
 
 func loadNHLToDB(cmd *cobra.Command, _ []string) {
@@ -61,15 +61,18 @@ func loadNHLToDB(cmd *cobra.Command, _ []string) {
 
 	switch method {
 	case "abbr":
-		err := ctx.service.Load.Loader()
+		err := ctx.service.NHLLoad.AbbrLoader()
 		if err != nil {
-			ctx.log.Error("failed to load to DB", "error", err)
+			ctx.log.Error("failed to load abbreviationNHL to DB",
+				slog.String("error", err.Error())) // Changed this line
 			return
 		}
-
-	case "roster":
-
 	case "allroster":
+		err := ctx.service.NHLLoad.RosterLoader()
+		if err != nil {
+			ctx.log.Error("failed to load rosterNHL to DB", "error", err)
+			return
+		}
 
 	default:
 		slog.Error("Unsupported method", "method", method)

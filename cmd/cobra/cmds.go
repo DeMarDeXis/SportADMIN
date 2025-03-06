@@ -31,23 +31,35 @@ var nflCmd = &cobra.Command{
 	Run:   parseNFL,
 }
 
+var nbaCmd = &cobra.Command{
+	Use:   "nba",
+	Short: "NBA",
+	Run:   parseNBA,
+}
+
 func init() {
 	//ROOT CMD
 	rootCmd.AddCommand(nhlCmd)
 	rootCmd.AddCommand(nflCmd)
+	rootCmd.AddCommand(nbaCmd)
 
 	//NHL CMD
 	nhlCmd.AddCommand(nhlParseCmd)
 	nhlCmd.AddCommand(nhlLoadToDBCmd)
 
+	//FLAGS for cmds
 	nhlParseCmd.Flags().StringP("method", "m", "", "What are we parsing")
-
 	if err := nhlParseCmd.MarkFlagRequired("method"); err != nil {
 		panic(err)
 	}
 
 	nhlLoadToDBCmd.Flags().StringP("method", "m", "", "What are we loading to DB")
 	if err := nhlLoadToDBCmd.MarkFlagRequired("method"); err != nil {
+		panic(err)
+	}
+
+	nbaCmd.Flags().StringP("method", "m", "", "What are we parsing")
+	if err := nbaCmd.MarkFlagRequired("method"); err != nil {
 		panic(err)
 	}
 }

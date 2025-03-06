@@ -5,16 +5,17 @@ import (
 	"log/slog"
 )
 
-type Load interface {
-	Loader() error
+type NHLLoad interface {
+	AbbrLoader() error
+	RosterLoader() error
 }
 
 type Service struct {
-	Load
+	NHLLoad
 }
 
 func NewService(storage *storage.Storage, log *slog.Logger) *Service {
 	return &Service{
-		Load: NewLoadService(storage.Load, log),
+		NHLLoad: NewLoadService(storage.NHLLoadDB, log),
 	}
 }

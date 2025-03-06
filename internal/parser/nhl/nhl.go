@@ -81,8 +81,9 @@ func AllRosterParse(g *geziyor.Geziyor, r *client.Response) {
 			}
 
 			currentTeam := &nhl.TeamRoster{
-				Name:   teamName,
-				Roster: make([]nhl.PlayerInfo, 0),
+				Name:        teamName,
+				Roster:      make([]nhl.PlayerInfo, 0),
+				PlayerCount: 0,
 			}
 			processedTeams[teamName] = true
 			//g.Exports <- currentTeam
@@ -91,14 +92,14 @@ func AllRosterParse(g *geziyor.Geziyor, r *client.Response) {
 			if href, ok := link.Attr("href"); ok {
 				teamURL := r.JoinURL(href)
 				g.Get(teamURL, func(g *geziyor.Geziyor, r *client.Response) {
-					UnoRosterParse(g, r, currentTeam)
+					unoRosterParse(g, r, currentTeam)
 				})
 			}
 		})
 	})
 }
 
-func UnoRosterParse(g *geziyor.Geziyor, r *client.Response, team *nhl.TeamRoster) {
+func unoRosterParse(g *geziyor.Geziyor, r *client.Response, team *nhl.TeamRoster) {
 	count := 0
 	r.HTMLDoc.Find("tr").Each(func(i int, s *goquery.Selection) {
 		if count >= 29 && count <= 53 {
@@ -109,23 +110,7 @@ func UnoRosterParse(g *geziyor.Geziyor, r *client.Response, team *nhl.TeamRoster
 			if len(parts) >= 8 && parts[0] != " " {
 				// Validation checks
 				isInj := isInjured(s)
-				//role, isCapBool := isCaptainOrAssistant(parts)
-				//
-				//if isValidPlayerData(parts) && isCapBool != false {
-				//	player := nhl.PlayerInfo{
-				//		Number:     parts[0],
-				//		Name:       parts[1],
-				//		Surname:    parts[2],
-				//		Position:   parts[3],
-				//		Hand:       parts[4],
-				//		Age:        parts[5],
-				//		Acquired:   parts[6],
-				//		Birthplace: strings.Join(parts[7:], " "),
-				//		Injured:    isInj,
-				//		Role:       role,
-				//	}
-				//	team.Roster = append(team.Roster, player)
-				//}
+
 				if isValidPlayerData(parts) && isCaptainOrAssistant(parts) == false {
 					player := nhl.PlayerInfo{
 						Number:     parts[0],
@@ -154,20 +139,6 @@ func UnoRosterParse(g *geziyor.Geziyor, r *client.Response, team *nhl.TeamRoster
 					}
 					team.Roster = append(team.Roster, player)
 				}
-				//if isInjured(s) {
-				//	player := nhl.PlayerInfo{
-				//		Number:     parts[0],
-				//		Name:       parts[1],
-				//		Surname:    parts[2],
-				//		Position:   parts[3],
-				//		Hand:       parts[4],
-				//		Age:        parts[5],
-				//		Acquired:   parts[6],
-				//		Birthplace: strings.Join(parts[7:], " "),
-				//		Injured:    true,
-				//	}
-				//	team.Roster = append(team.Roster, player)
-				//}
 			}
 		}
 		count++
@@ -175,6 +146,7 @@ func UnoRosterParse(g *geziyor.Geziyor, r *client.Response, team *nhl.TeamRoster
 
 	// Only export team if roster is not empty
 	if len(team.Roster) > 0 {
+		team.PlayerCount = len(team.Roster)
 		g.Exports <- team
 	}
 }
@@ -211,14 +183,6 @@ func isCaptainOrAssistant(parts []string) bool {
 
 	return false
 }
-
-//func isCaptainOrAssistant(parts []string) (string, bool) {
-//	if parts[3] == "(C)" || parts[3] == "(A)" {
-//		return parts[3], true
-//	}
-//
-//	return " ", false
-//}
 
 func isInjured(s *goquery.Selection) bool {
 	if s.Find("img[alt='Injured Reserve']").Length() > 0 {

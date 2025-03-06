@@ -1,13 +1,6 @@
 version: '3'
 
 tasks:
-  parse:
-    alias: parser
-    desc: "Parse is working"
-    cmds:
-      - echo "Parse is working"
-      - go run ./cmd/parser/main.go
-
   build:
     aliases:
       - b
@@ -28,15 +21,7 @@ tasks:
     desc: "Parse nhl abbreviations"
     cmds:
       - echo "Parse nhl abbreviations"
-      - ./sportthunder nhl --method abbr
-
-  parse-roster-nhl:
-    aliases:
-    - prnhl
-    desc: "Parse nhl roster(debug)"
-    cmds:
-      - echo "Parse nhl abbreviations"
-      - ./sportthunder nhl --method roster
+      - ./sportthunder nhl nhl-db -m abbr
 
   parse-allroster-nhl:
     aliases:
@@ -44,4 +29,13 @@ tasks:
     desc: "Parse nhl roster"
     cmds:
       - echo "Parse nhl abbreviations"
-      - ./sportthunder nhl --method allroster
+      - ./sportthunder nhl nhl-prs -m allroster
+
+#TODO: fix other commands
+#  parse-roster-nhl:
+#    aliases:
+#    - prnhl
+#    desc: "Parse nhl roster(debug)"
+#    cmds:
+#      - echo "Parse nhl abbreviations"
+#      - ./sportthunder nhl --method roster
