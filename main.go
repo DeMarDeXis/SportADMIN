@@ -36,6 +36,7 @@ func setupPrettySlogLocal() *slog.Logger {
 	return slog.New(handlerLog)
 }
 
-// TODO: fix t.j. oshie err
-// TODO: add flags-methods to drawio
-// TODO: add img_url to teams and push to github
+// TODO: fix t.j. oshie err in nhl roster (31.03.25)
+// TODO: add path from constants: internal/service/nhlLoad.go (29.03.25)
+// TODO: think about the cases of the absolute and relative paths(Import cmd) (15.04.25) (partial)
+// TODO: not working updated_at in ImportToPostgres(15.04.25)

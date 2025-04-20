@@ -11,6 +11,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var nbaCmd = &cobra.Command{
+	Use:   "nba",
+	Short: "NBA",
+	Long:  "Main NBA command which contains subcommands",
+}
+
+var nbaParseCmd = &cobra.Command{
+	Use:   "nba-prs",
+	Short: "NBA parser",
+	Long:  "It is NBA parser",
+	Run:   parseNBA,
+}
+
+var nbaLoadToDBCmd = &cobra.Command{
+	Use:   "nba-db",
+	Short: "NBA loader",
+	Long:  "It is NBA loader to DB",
+	Run:   loadNBAToDB,
+}
+
 func parseNBA(cmd *cobra.Command, _ []string) {
 	ctx.log.Info("NBA parse started")
 
@@ -52,4 +72,25 @@ func parseNBA(cmd *cobra.Command, _ []string) {
 	parser.Parser(objParse, filePath, directObj)
 
 	ctx.log.Info("NBA parse finished")
+}
+
+func loadNBAToDB(cmd *cobra.Command, _ []string) {
+	ctx.log.Info("NBA loader started")
+
+	method := cmd.Flag("method").Value.String()
+	ctx.log.Info("method", "method", method)
+
+	switch method {
+	case "abbr":
+		ctx.log.Info("NBA loader started")
+		err := ctx.service.NBALoad.AbbrNBALoader()
+		if err != nil {
+			ctx.log.Error("failed to load abbreviationNHL to DB")
+		}
+	default:
+		ctx.log.Error("Unsupported method", "method", method)
+		cmd.PrintErr("Unknown method")
+	}
+
+	ctx.log.Info("NBA loader finished")
 }

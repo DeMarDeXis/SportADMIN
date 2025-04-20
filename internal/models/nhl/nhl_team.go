@@ -7,15 +7,6 @@ type Team struct {
 	Abbr string `json:"abbr"`
 }
 
-type TeamDB struct {
-	ID           int    `db:"id"`
-	ImgURL       string `db:"img_url" json:"img_url"`
-	Name         string `db:"name" json:"name"`
-	Abbreviation string `db:"abbreviation" json:"abbr"`
-	Conference   string `db:"conference" json:"conference"`
-	Division     string `db:"division" json:"division"`
-}
-
 func (m Team) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Name string `json:"name"`
@@ -24,6 +15,15 @@ func (m Team) MarshalJSON() ([]byte, error) {
 		Name: m.Name,
 		Abbr: m.Abbr,
 	})
+}
+
+type TeamDB struct {
+	ID           int    `db:"id"`
+	ImgURL       string `db:"img_url" json:"img_url"`
+	Name         string `db:"name" json:"name"`
+	Abbreviation string `db:"abbreviation" json:"abbr"`
+	Conference   string `db:"conference" json:"conference"`
+	Division     string `db:"division" json:"division"`
 }
 
 type TeamRoster struct {

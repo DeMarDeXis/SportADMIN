@@ -4,37 +4,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var nhlCmd = &cobra.Command{
-	Use:   "nhl",
-	Short: "NHL",
-	Long:  "Main NHL command which contains subcommands",
-	//Run:   parseNHL, //TODO: check and delete(16.01.25)
-}
-
-var nhlParseCmd = &cobra.Command{
-	Use:   "nhl-prs",
-	Short: "NHL parser",
-	Long:  "It is NHL parser",
-	Run:   parseNHL,
-}
-
-var nhlLoadToDBCmd = &cobra.Command{
-	Use:   "nhl-db",
-	Short: "NHL loader",
-	Long:  "It is NHL loader to DB",
-	Run:   loadNHLToDB, //TODO: make loader to DB(16.01.25)
-}
-
 var nflCmd = &cobra.Command{
 	Use:   "nfl",
 	Short: "NFL",
+}
+
+var nflParseCmd = &cobra.Command{
+	Use:   "nfl-prs",
+	Short: "NFL parser",
+	Long:  "It is NFL parser",
 	Run:   parseNFL,
 }
 
-var nbaCmd = &cobra.Command{
-	Use:   "nba",
-	Short: "NBA",
-	Run:   parseNBA,
+var nflLoadToDBCmd = &cobra.Command{
+	Use:   "nfl-db",
+	Short: "NFL loader",
+	Long:  "It is NFL loader to DB",
+	Run:   loadNFLToDB,
 }
 
 func init() {
@@ -42,24 +28,63 @@ func init() {
 	rootCmd.AddCommand(nhlCmd)
 	rootCmd.AddCommand(nflCmd)
 	rootCmd.AddCommand(nbaCmd)
+	rootCmd.AddCommand(mlbCmd)
 
 	//NHL CMD
 	nhlCmd.AddCommand(nhlParseCmd)
 	nhlCmd.AddCommand(nhlLoadToDBCmd)
 
+	//NBA CMD
+	nbaCmd.AddCommand(nbaParseCmd)
+	nbaCmd.AddCommand(nbaLoadToDBCmd)
+
+	//NFL CMD
+	nflCmd.AddCommand(nflParseCmd)
+	nflCmd.AddCommand(nflLoadToDBCmd)
+
+	//MLB CMD
+	mlbCmd.AddCommand(mlbParseCmd)
+	mlbCmd.AddCommand(mlbLoadToDBCmd)
+
 	//FLAGS for cmds
+	//NHL
 	nhlParseCmd.Flags().StringP("method", "m", "", "What are we parsing")
 	if err := nhlParseCmd.MarkFlagRequired("method"); err != nil {
 		panic(err)
 	}
-
 	nhlLoadToDBCmd.Flags().StringP("method", "m", "", "What are we loading to DB")
 	if err := nhlLoadToDBCmd.MarkFlagRequired("method"); err != nil {
 		panic(err)
 	}
 
-	nbaCmd.Flags().StringP("method", "m", "", "What are we parsing")
-	if err := nbaCmd.MarkFlagRequired("method"); err != nil {
+	//NBA
+	nbaParseCmd.Flags().StringP("method", "m", "", "What are we parsing")
+	if err := nbaParseCmd.MarkFlagRequired("method"); err != nil {
 		panic(err)
 	}
+	nbaLoadToDBCmd.Flags().StringP("method", "m", "", "What are we loading to DB")
+	if err := nbaLoadToDBCmd.MarkFlagRequired("method"); err != nil {
+		panic(err)
+	}
+
+	//NFL
+	nflParseCmd.Flags().StringP("method", "m", "", "What are we parsing")
+	if err := nflParseCmd.MarkFlagRequired("method"); err != nil {
+		panic(err)
+	}
+	nflLoadToDBCmd.Flags().StringP("method", "m", "", "What are we loading to DB")
+	if err := nflLoadToDBCmd.MarkFlagRequired("method"); err != nil {
+		panic(err)
+	}
+
+	//MLB
+	mlbParseCmd.Flags().StringP("method", "m", "", "What are we parsing")
+	if err := mlbParseCmd.MarkFlagRequired("method"); err != nil {
+		panic(err)
+	}
+	mlbLoadToDBCmd.Flags().StringP("method", "m", "", "What are we loading to DB")
+	if err := mlbLoadToDBCmd.MarkFlagRequired("method"); err != nil {
+		panic(err)
+	}
+
 }

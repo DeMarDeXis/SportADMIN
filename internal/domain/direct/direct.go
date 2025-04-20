@@ -7,11 +7,10 @@ const (
 )
 
 const (
-	NHLAbbrJSONFile = "NHLAbbr.json"
-	NFLAbbrJSONFile = "NFLAbbr.json"
+	NHLRoster    = "https://en.wikipedia.org/wiki/Nashville_Predators"
+	AllNHLRoster = "https://en.wikipedia.org/wiki/Lists_of_current_NHL_team_rosters"
 )
 
 const (
-	NHLRoster    = "https://en.wikipedia.org/wiki/Nashville_Predators"
-	AllNHLRoster = "https://en.wikipedia.org/wiki/Lists_of_current_NHL_team_rosters"
+	MLBNameAbbr = "https://www.sportskeeda.com/baseball/mlb-team-abbreviations"
 )

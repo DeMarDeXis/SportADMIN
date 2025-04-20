@@ -6,6 +6,7 @@ const (
 	nhlPath  = "nhl/"
 	nflPath  = "nfl/"
 	nbaPath  = "nba/"
+	mlbPath  = "mlb/"
 )
 
 const (
@@ -27,4 +28,8 @@ const (
 	rosterNBA      = "NBARoster.json"
 	allRosterNBA   = "NBAAllRoster.json"
 	debugRosterNBA = "DebugRoster.json"
+)
+
+const (
+	abbrMLB = "MLBAbbr.json"
 )

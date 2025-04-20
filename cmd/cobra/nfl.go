@@ -38,3 +38,24 @@ func parseNFL(cmd *cobra.Command, _ []string) {
 
 	slog.Info("NHL parse finished")
 }
+
+func loadNFLToDB(cmd *cobra.Command, _ []string) {
+	ctx.log.Info("NFL loader started")
+
+	method := cmd.Flag("method").Value.String()
+	ctx.log.Info("method", "method", method)
+
+	switch method {
+	case "abbr":
+		ctx.log.Info("NFL loader started")
+		err := ctx.service.NFLLoad.AbbrNFLLoader()
+		if err != nil {
+			ctx.log.Error("failed to load abbreviationNHL to DB")
+		}
+	default:
+		ctx.log.Error("Unsupported method", "method", method)
+		cmd.PrintErr("Unknown method")
+	}
+
+	ctx.log.Info("NFL loader finished")
+}

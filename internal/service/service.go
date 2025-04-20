@@ -8,14 +8,29 @@ import (
 type NHLLoad interface {
 	AbbrLoader() error
 	RosterLoader() error
+	ScheduleLoader() error
+	ExportScheduleToExcel(filePath string) error
+	ImportScheduleFromExcel(filePath string) error
+}
+
+type NBALoad interface {
+	AbbrNBALoader() error
+}
+
+type NFLLoad interface {
+	AbbrNFLLoader() error
 }
 
 type Service struct {
 	NHLLoad
+	NBALoad
+	NFLLoad
 }
 
 func NewService(storage *storage.Storage, log *slog.Logger) *Service {
 	return &Service{
-		NHLLoad: NewLoadService(storage.NHLLoadDB, log),
+		NHLLoad: NewNHLLoadService(storage.NHLLoadDB, log),
+		NBALoad: NewNBALoadService(storage.NBALoadDB, log),
+		NFLLoad: NewNFLLoadService(storage.NFLLoadDB, log),
 	}
 }

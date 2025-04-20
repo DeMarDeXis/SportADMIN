@@ -4,12 +4,46 @@ import (
 	"AdminAppForDiplom/internal/domain/direct"
 	"AdminAppForDiplom/internal/parser"
 	"AdminAppForDiplom/internal/parser/nhl"
+	"bufio"
 	"fmt"
 	"github.com/geziyor/geziyor"
 	"github.com/geziyor/geziyor/client"
 	"github.com/spf13/cobra"
 	"log/slog"
+	"os"
+	"strings"
+	"time"
 )
+
+const (
+	abbrFlagNhl           = "abbr"
+	rosterFlagNhl         = "roster"
+	allRosterFlagNhl      = "allroster"
+	debugFlagNhl          = "debug"
+	scheduleFlagNhl       = "schedule"
+	exportScheduleFlagNhl = "exportScheduleNhlXls"
+	importScheduleFlagNhl = "importScheduleNhlXls"
+)
+
+var nhlCmd = &cobra.Command{
+	Use:   "nhl",
+	Short: "NHL",
+	Long:  "Main NHL command which contains subcommands",
+}
+
+var nhlParseCmd = &cobra.Command{
+	Use:   "nhl-prs",
+	Short: "NHL parser",
+	Long:  "It is NHL parser",
+	Run:   parseNHL,
+}
+
+var nhlLoadToDBCmd = &cobra.Command{
+	Use:   "nhl-db",
+	Short: "NHL loader",
+	Long:  "It is NHL loader to DB",
+	Run:   loadNHLToDB,
+}
 
 func parseNHL(cmd *cobra.Command, _ []string) {
 	ctx.log.Info("NHL parse started")
@@ -23,23 +57,23 @@ func parseNHL(cmd *cobra.Command, _ []string) {
 	ctx.log.Info("method", "method", method)
 
 	switch method {
-	case "abbr":
-		filePath = jsonPath + abbrNHL
+	case abbrFlagNhl:
+		filePath = jsonPath + nhlPath + abbrNHL
 		objParse = nhl.NameParse
 		directObj = direct.NHLNameAbbr
 
-	case "roster":
-		filePath = jsonPath + rosterNHL
+	case rosterFlagNhl:
+		filePath = jsonPath + nhlPath + rosterNHL
 		objParse = nhl.RosterParse
 		directObj = direct.NHLRoster
 
-	case "allroster":
-		filePath = jsonPath + allRosterNHL
+	case allRosterFlagNhl:
+		filePath = jsonPath + nhlPath + allRosterNHL
 		objParse = nhl.AllRosterParse
 		directObj = direct.AllNHLRoster
 
-	case "debug":
-		filePath = jsonPath + debugRosterNHL
+	case debugFlagNhl:
+		filePath = jsonPath + nhlPath + debugRosterNHL
 		//objParse = nhl.AllRosterParse
 		//directObj = direct.AllNHLRoster
 
@@ -60,22 +94,58 @@ func loadNHLToDB(cmd *cobra.Command, _ []string) {
 	ctx.log.Info("method", "method", method)
 
 	switch method {
-	case "abbr":
+	case abbrFlagNhl:
 		err := ctx.service.NHLLoad.AbbrLoader()
 		if err != nil {
-			ctx.log.Error("failed to load abbreviationNHL to DB",
-				slog.String("error", err.Error())) // Changed this line
+			ctx.log.Error("failed to load abbreviationNHL to DB", slog.String("error", err.Error())) // Changed this line
 			return
 		}
-	case "allroster":
+	case allRosterFlagNhl:
 		err := ctx.service.NHLLoad.RosterLoader()
 		if err != nil {
 			ctx.log.Error("failed to load rosterNHL to DB", "error", err)
 			return
 		}
+	case scheduleFlagNhl:
+		err := ctx.service.NHLLoad.ScheduleLoader()
+		if err != nil {
+			ctx.log.Error("failed to load scheduleNHL to DB", slog.String("error", err.Error()))
+			return
+		}
+	case exportScheduleFlagNhl:
+		outputPath := "./exports"
+		filePath := fmt.Sprintf("%s/nhl_schedule_%s.xlsx", outputPath, time.Now().Format("20060102_150405"))
+
+		//reader := bufio.NewReader(os.Stdin)
+		//fmt.Print("Enter the path to the Excel file: ")
+		//filePath, _ := reader.ReadString('\n')
+		//filePath = strings.TrimSpace(filePath)
+		//if !strings.HasSuffix(filePath, ".xlsx") {
+		//	filePath += ".xlsx"
+		//}
+
+		err := ctx.service.NHLLoad.ExportScheduleToExcel(filePath)
+		if err != nil {
+			ctx.log.Error("failed to export scheduleNHL to Excel", slog.String("error", err.Error()))
+			return
+		}
+
+	case importScheduleFlagNhl:
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter the path to the Excel file: ")
+		filePath, _ := reader.ReadString('\n')
+		filePath = strings.TrimSpace(filePath)
+		if !strings.HasSuffix(filePath, ".xlsx") {
+			filePath += ".xlsx"
+		}
+		buildPath := "./" + filePath
+		err := ctx.service.NHLLoad.ImportScheduleFromExcel(buildPath)
+		if err != nil {
+			ctx.log.Error("failed to import scheduleNHL to Excel", slog.String("error", err.Error()))
+		}
 
 	default:
-		slog.Error("Unsupported method", "method", method)
+		ctx.log.Error("Unsupported method", "method", method)
 		cmd.PrintErr("Unknown method")
 	}
 
