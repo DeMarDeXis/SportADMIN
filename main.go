@@ -37,6 +37,10 @@ func setupPrettySlogLocal() *slog.Logger {
 }
 
 // TODO: fix t.j. oshie err in nhl roster (31.03.25)
-// TODO: add path from constants: internal/service/nhlLoad.go (29.03.25)
-// TODO: think about the cases of the absolute and relative paths(Import cmd) (15.04.25) (partial)
-// TODO: not working updated_at in ImportToPostgres(15.04.25)
+// TODO: think about the cases of the absolute and relative paths(Import cmd) (multiple cases) (15.04.25)
+
+// TODO: deleter in postgres (08.05.25)
+
+// TODO: add GoDoc comments to all functions in storage(11.05.25)
+
+// TODO: add MLB teams to DB (11.05.25)

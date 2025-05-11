@@ -14,6 +14,7 @@ type NHLLoadDB interface {
 	ScheduleLoaderToDB(schedules []nhl.Schedule) error
 	GetAllSchedule() ([]nhl.ScheduleExport, error)
 	UpsertSchedule(schedules []nhl.ScheduleImport) error
+	AddNewSchedule(schedules []nhl.ScheduleImport) error
 }
 
 type NBALoadDB interface {

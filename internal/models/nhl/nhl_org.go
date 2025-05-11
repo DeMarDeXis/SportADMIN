@@ -64,8 +64,6 @@ type ScheduleImport struct {
 }
 
 func ParseScheduleFromJSON(jsonData ScheduleJSON) Schedule {
-	const err = "internal.models.nhl.Schedule.ParseScheduleFromJSON: "
-
 	var schedule Schedule
 	schedule = Schedule{
 		Date:         jsonData.Date,

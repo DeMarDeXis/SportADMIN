@@ -8,9 +8,10 @@ import (
 type NHLLoad interface {
 	AbbrLoader() error
 	RosterLoader() error
-	ScheduleLoader() error
+	ScheduleLoader(filePath string) error
 	ExportScheduleToExcel(filePath string) error
 	ImportScheduleFromExcel(filePath string) error
+	AddNewMatchDataFromExcel() error
 }
 
 type NBALoad interface {

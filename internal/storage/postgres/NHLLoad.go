@@ -56,7 +56,6 @@ func (l *LoaderStorage) RosterLoaderToDB(teamRoster nhl.TeamRosterDB) error {
 	}
 	defer tx.Rollback()
 
-	// Get team_id from nhl_teams by team name
 	var teamID int
 	q := `SELECT nt.id FROM nhl_teams nt 
           JOIN teams t ON t.id = nt.id_team 
@@ -66,7 +65,6 @@ func (l *LoaderStorage) RosterLoaderToDB(teamRoster nhl.TeamRosterDB) error {
 		return fmt.Errorf("failed to get team id for %s: %w", teamRoster.TeamName, err)
 	}
 
-	// Insert players
 	for _, player := range teamRoster.Players {
 		q := `INSERT INTO nhl_roster 
               (id_team, name, surname, number, position, hand, age, 
@@ -212,12 +210,11 @@ func (l *LoaderStorage) UpsertSchedule(schedules []nhl.ScheduleImport) error {
 	}
 	defer tx.Rollback()
 
-	//Allocate a map to store team names and their corresponding IDs
 	teamNames := make([]string, 0, len(schedules)*2)
 	for _, s := range schedules {
 		teamNames = append(teamNames, s.VisitorTeam, s.HomeTeam)
 	}
-	teamNames = uniqueStrings(teamNames) //filter unique team names
+	teamNames = uniqueStrings(teamNames)
 
 	teamIDs := make(map[string]int)
 	if len(teamNames) > 0 {
@@ -247,54 +244,51 @@ func (l *LoaderStorage) UpsertSchedule(schedules []nhl.ScheduleImport) error {
 		}
 	}
 
-	//stmt, err := tx.Prepare(`
-	//    INSERT INTO nhl_schedule (
-	//        date_game, time_game, visitor_team_id, home_team_id,
-	//        visitor_score, home_score, attendance, game_duration,
-	//        is_overtime, venue, notes
-	//    )
-	//    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-	//    ON CONFLICT (date_game, time_game, visitor_team_id, home_team_id)
-	//    DO UPDATE SET
-	//        visitor_score = EXCLUDED.visitor_score,
-	//        home_score = EXCLUDED.home_score,
-	//        attendance = EXCLUDED.attendance,
-	//        game_duration = EXCLUDED.game_duration,
-	//        is_overtime = EXCLUDED.is_overtime,
-	//        venue = EXCLUDED.venue,
-	//        notes = EXCLUDED.notes,
-	//        updated_at = NOW()`)
-	stmt, err := tx.Prepare(`
-    INSERT INTO nhl_schedule (
-        date_game, time_game, visitor_team_id, home_team_id,
-        visitor_score, home_score, attendance, game_duration,
-        is_overtime, venue, notes
-    )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-    ON CONFLICT (date_game, time_game, visitor_team_id, home_team_id) 
-    DO UPDATE SET
-        visitor_score = EXCLUDED.visitor_score,
-        home_score = EXCLUDED.home_score,
-        attendance = EXCLUDED.attendance,
-        game_duration = EXCLUDED.game_duration,
-        is_overtime = EXCLUDED.is_overtime,
-        venue = EXCLUDED.venue,
-        notes = EXCLUDED.notes,
-        updated_at = CASE
-            WHEN nhl_schedule.visitor_score IS DISTINCT FROM EXCLUDED.visitor_score OR
-                 nhl_schedule.home_score IS DISTINCT FROM EXCLUDED.home_score OR
-                 nhl_schedule.attendance IS DISTINCT FROM EXCLUDED.attendance OR
-                 nhl_schedule.game_duration IS DISTINCT FROM EXCLUDED.game_duration OR
-                 nhl_schedule.is_overtime IS DISTINCT FROM EXCLUDED.is_overtime OR
-                 nhl_schedule.venue IS DISTINCT FROM EXCLUDED.venue OR
-                 nhl_schedule.notes IS DISTINCT FROM EXCLUDED.notes
-            THEN NOW()
-            ELSE nhl_schedule.updated_at
-        END`)
+	insertStmt, err := tx.Prepare(`
+		INSERT INTO nhl_schedule (
+			date_game, time_game, visitor_team_id, home_team_id,
+			visitor_score, home_score, attendance, game_duration,
+			is_overtime, venue, notes
+		)
+		VALUES ($1, $2, $3, $4, $5::integer, $6::integer, $7::integer, $8, $9, $10, $11)
+		ON CONFLICT (date_game, time_game, visitor_team_id, home_team_id) 
+		DO NOTHING
+	`)
 	if err != nil {
-		return fmt.Errorf("failed to prepare upsert statement: %w \n in %s", err, op)
+		return fmt.Errorf("failed to prepare insert statement: %w \n in %s", err, op)
 	}
-	defer stmt.Close()
+	defer insertStmt.Close()
+
+	updateStmt, err := tx.Prepare(`
+		UPDATE nhl_schedule
+		SET 
+			visitor_score = $5::integer,
+			home_score = $6::integer,
+			attendance = $7::integer,
+			game_duration = $8,
+			is_overtime = $9,
+			venue = $10,
+			notes = $11,
+			updated_at = NOW()
+		WHERE 
+			date_game = $1 AND 
+			time_game = $2 AND 
+			visitor_team_id = $3 AND 
+			home_team_id = $4 AND
+			(
+				visitor_score IS DISTINCT FROM $5::integer OR
+				home_score IS DISTINCT FROM $6::integer OR
+				attendance IS DISTINCT FROM $7::integer OR
+				game_duration IS DISTINCT FROM $8 OR
+				is_overtime IS DISTINCT FROM $9 OR
+				venue IS DISTINCT FROM $10 OR
+				notes IS DISTINCT FROM $11
+			)
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to prepare update statement: %w \n in %s", err, op)
+	}
+	defer updateStmt.Close()
 
 	for _, s := range schedules {
 		visitorID, ok := teamIDs[s.VisitorTeam]
@@ -307,12 +301,26 @@ func (l *LoaderStorage) UpsertSchedule(schedules []nhl.ScheduleImport) error {
 			return fmt.Errorf("home team not found: %s \n in %s", s.HomeTeam, op)
 		}
 
-		_, err := stmt.Exec(
+		_, err := insertStmt.Exec(
 			s.Date, s.Time, visitorID, homeID,
 			s.VisitorScore, s.HomeScore, s.Attendance, s.GameDuration,
 			s.IsOvertime, s.Venue, s.Notes)
 		if err != nil {
-			return fmt.Errorf("failed to upsert schedule: %w \n in %s", err, op)
+			return fmt.Errorf("failed to insert schedule: %w \n in %s", err, op)
+		}
+
+		result, err := updateStmt.Exec(
+			s.Date, s.Time, visitorID, homeID,
+			s.VisitorScore, s.HomeScore, s.Attendance, s.GameDuration,
+			s.IsOvertime, s.Venue, s.Notes)
+		if err != nil {
+			return fmt.Errorf("failed to update schedule: %w \n in %s", err, op)
+		}
+
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected > 0 {
+			fmt.Printf("Updated %d rows for game %s %s: %s vs %s\n",
+				rowsAffected, s.Date, s.Time, s.VisitorTeam, s.HomeTeam)
 		}
 	}
 
@@ -323,7 +331,81 @@ func (l *LoaderStorage) UpsertSchedule(schedules []nhl.ScheduleImport) error {
 	return nil
 }
 
-// Вспомогательная функция для уникальных строк
+func (l *LoaderStorage) AddNewSchedule(schedules []nhl.ScheduleImport) error {
+	const op = "storage.postgres.NHLLoad.AddNewSchedule"
+
+	tx, err := l.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w \n in %s", err, op)
+	}
+	defer tx.Rollback()
+
+	teamNames := make([]string, 0, len(schedules)*2)
+	for _, s := range schedules {
+		teamNames = append(teamNames, s.VisitorTeam, s.HomeTeam)
+	}
+	teamNames = uniqueStrings(teamNames)
+	teamIDs := make(map[string]int)
+	if len(teamNames) > 0 {
+		query, args, err := sqlx.In(`
+            SELECT t.name, nt.id 
+            FROM nhl_teams nt
+            JOIN teams t ON t.id = nt.id_team
+            WHERE t.name IN (?)`, teamNames)
+		if err != nil {
+			return fmt.Errorf("failed to build team query: %w \n in %s", err, op)
+		}
+
+		query = l.db.Rebind(query)
+		rows, err := tx.Query(query, args...)
+		if err != nil {
+			return fmt.Errorf("failed to get team IDs: %w \n in %s", err, op)
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var name string
+			var id int
+			if err := rows.Scan(&name, &id); err != nil {
+				return fmt.Errorf("failed to scan team ID: %w \n in %s", err, op)
+			}
+			teamIDs[name] = id
+		}
+	}
+
+	qNewSchedule, err := tx.Prepare(`INSERT INTO nhl_schedule (date_game, time_game, visitor_team_id, home_team_id, visitor_score, home_score, attendance, game_duration,is_overtime, venue, notes) 
+					VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+					ON CONFLICT (date_game, time_game, visitor_team_id, home_team_id) DO NOTHING`)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %w \n in %s", err, op)
+	}
+	defer qNewSchedule.Close()
+
+	for _, s := range schedules {
+		visitorID, ok := teamIDs[s.VisitorTeam]
+		if !ok {
+			return fmt.Errorf("visitor team not found: %s \n in %s", s.VisitorTeam, op)
+		}
+
+		homeID, ok := teamIDs[s.HomeTeam]
+		if !ok {
+			return fmt.Errorf("home team not found: %s \n in %s", s.HomeTeam, op)
+		}
+
+		_, err := qNewSchedule.Exec(s.Date, s.Time, visitorID, homeID,
+			s.VisitorScore, s.HomeScore, s.Attendance, s.GameDuration, s.IsOvertime, s.Venue, s.Notes)
+		if err != nil {
+			return fmt.Errorf("failed to insert schedule: %w \n in %s", err, op)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w \n in %s", err, op)
+	}
+
+	return nil
+}
+
 func uniqueStrings(input []string) []string {
 	unique := make(map[string]struct{})
 	for _, v := range input {

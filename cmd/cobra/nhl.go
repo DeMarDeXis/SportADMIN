@@ -19,10 +19,10 @@ const (
 	abbrFlagNhl           = "abbr"
 	rosterFlagNhl         = "roster"
 	allRosterFlagNhl      = "allroster"
-	debugFlagNhl          = "debug"
 	scheduleFlagNhl       = "schedule"
 	exportScheduleFlagNhl = "exportScheduleNhlXls"
-	importScheduleFlagNhl = "importScheduleNhlXls"
+	updateScheduleFlagNHL = "UpdScheduleNhlXls"
+	AddNewMatchFlagNHL    = "AddNewMatchNhlXls" //TODO: add this command in the Description
 )
 
 var nhlCmd = &cobra.Command{
@@ -36,13 +36,23 @@ var nhlParseCmd = &cobra.Command{
 	Short: "NHL parser",
 	Long:  "It is NHL parser",
 	Run:   parseNHL,
+	//TODO: add example and description like in nhlLoadToDBCmd (right down)
 }
 
 var nhlLoadToDBCmd = &cobra.Command{
 	Use:   "nhl-db",
 	Short: "NHL loader",
-	Long:  "It is NHL loader to DB",
-	Run:   loadNHLToDB,
+	Long: "It is NHL loader to DB" +
+		"NHL loader has next subcommands: " + "\n" +
+		"-" + abbrFlagNhl + "\n" +
+		"-" + allRosterFlagNhl + "\n" +
+		"-" + scheduleFlagNhl + "\n" +
+		"-" + exportScheduleFlagNhl + "\n" +
+		"-" + updateScheduleFlagNHL + "\n" +
+		"-" + AddNewMatchFlagNHL + "\n",
+	// TODO: add new const when new subcommand will be added
+	Example: "./sportthunder nhl nhl-db -m importScheduleNhlXls",
+	Run:     loadNHLToDB,
 }
 
 func parseNHL(cmd *cobra.Command, _ []string) {
@@ -71,11 +81,6 @@ func parseNHL(cmd *cobra.Command, _ []string) {
 		filePath = jsonPath + nhlPath + allRosterNHL
 		objParse = nhl.AllRosterParse
 		directObj = direct.AllNHLRoster
-
-	case debugFlagNhl:
-		filePath = jsonPath + nhlPath + debugRosterNHL
-		//objParse = nhl.AllRosterParse
-		//directObj = direct.AllNHLRoster
 
 	default:
 		ctx.log.Error("Unsupported method", "method", method)
@@ -107,22 +112,23 @@ func loadNHLToDB(cmd *cobra.Command, _ []string) {
 			return
 		}
 	case scheduleFlagNhl:
-		err := ctx.service.NHLLoad.ScheduleLoader()
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter the path to the JSON file: ")
+		filePath, _ := reader.ReadString('\n')
+		filePath = strings.TrimSpace(filePath)
+		if !strings.HasSuffix(filePath, ".json") {
+			filePath += ".json"
+		}
+		buildPath := "./" + filePath
+		err := ctx.service.NHLLoad.ScheduleLoader(buildPath)
 		if err != nil {
 			ctx.log.Error("failed to load scheduleNHL to DB", slog.String("error", err.Error()))
 			return
 		}
+
 	case exportScheduleFlagNhl:
 		outputPath := "./exports"
 		filePath := fmt.Sprintf("%s/nhl_schedule_%s.xlsx", outputPath, time.Now().Format("20060102_150405"))
-
-		//reader := bufio.NewReader(os.Stdin)
-		//fmt.Print("Enter the path to the Excel file: ")
-		//filePath, _ := reader.ReadString('\n')
-		//filePath = strings.TrimSpace(filePath)
-		//if !strings.HasSuffix(filePath, ".xlsx") {
-		//	filePath += ".xlsx"
-		//}
 
 		err := ctx.service.NHLLoad.ExportScheduleToExcel(filePath)
 		if err != nil {
@@ -130,7 +136,7 @@ func loadNHLToDB(cmd *cobra.Command, _ []string) {
 			return
 		}
 
-	case importScheduleFlagNhl:
+	case updateScheduleFlagNHL:
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter the path to the Excel file: ")
 		filePath, _ := reader.ReadString('\n')
@@ -142,6 +148,12 @@ func loadNHLToDB(cmd *cobra.Command, _ []string) {
 		err := ctx.service.NHLLoad.ImportScheduleFromExcel(buildPath)
 		if err != nil {
 			ctx.log.Error("failed to import scheduleNHL to Excel", slog.String("error", err.Error()))
+		}
+
+	case AddNewMatchFlagNHL:
+		err := ctx.service.AddNewMatchDataFromExcel()
+		if err != nil {
+			ctx.log.Error("failed to add new match", slog.String("error", err.Error()))
 		}
 
 	default:
