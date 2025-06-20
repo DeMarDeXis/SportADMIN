@@ -1,0 +1,41 @@
+version: '3'
+
+tasks:
+  build:
+    aliases:
+      - b
+    desc: "Build app"
+    cmds:
+      - go build
+
+  build-custom:
+    aliases:
+      - bc
+    desc: "Build app"
+    cmds:
+      - go build -o sportthunder.exe
+
+  parse-abbr-nhl:
+    aliases:
+    - pan
+    desc: "Parse nhl abbreviations"
+    cmds:
+      - echo "Parse nhl abbreviations"
+      - ./sportthunder nhl nhl-db -m abbr
+
+  parse-allroster-nhl:
+    aliases:
+      - parsnhl
+    desc: "Parse nhl roster"
+    cmds:
+      - echo "Parse nhl abbreviations"
+      - ./sportthunder nhl nhl-prs -m allroster
+
+#TODO: fix other commands
+#  parse-roster-nhl:
+#    aliases:
+#    - prnhl
+#    desc: "Parse nhl roster(debug)"
+#    cmds:
+#      - echo "Parse nhl abbreviations"
+#      - ./sportthunder nhl --method roster

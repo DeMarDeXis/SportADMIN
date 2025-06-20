@@ -1,0 +1,14 @@
+# .exe file after build cmd
+SportThunder.exe
+# all files for load
+jsondata
+# idea files
+.idea
+# .env file
+.env
+# unnecessary .txt file
+note.txt
+# config file (ping db)
+config
+# output folder for export cmd
+exports
